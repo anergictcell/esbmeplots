@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en-US">
+  <style>
+  html,body {
+    font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  }
+  div#tooltip {
+    visibility: hidden;
+    position: absolute;
+    top:0px;
+    left:0px;
+    background-color: #EEEEEE;
+    padding: 5px;
+    border-radius: 3px;
+    box-shadow: inset 0px 0px 2px #616161;
+    font-size: 0.8em;
+    z-index: 1;
+  }
+  div.plot-container {
+    display: flex;
+    border: 1px solid #000;
+    padding: 10px;
+  }
+  .plot-controls{
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      flex: 2;
+  }
+  .plot-plotter {
+    width: 400px
+  }
+  .plot-description {
+    font-family: monospace;
+    background: #37474F;
+    color: #FF9800;
+    padding: 10px;
+    width: 40em;
+    word-wrap: break-word;
+  }
+  .controller {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .controller-label {
+    margin-left: 20px;
+    width: 150px;
+  }
+  .controller-input {
+    width: 100px;
+  }
+  .controller-value {
+    margin-left: 20px;
+    font-size: 0.8em;
+  }
+  rect {
+    stroke: #424242;
+    stroke-width: 0.5px;
+  }
+  rect:hover {
+      opacity: 0.8;
+  }
+  rect.blue {
+      fill: #1976D2;
+  }
+  rect.green {
+    fill: #388e3c;
+  }
+  rect.red {
+    fill: #D32F2F;
+  }
+  circle {
+    stroke: #424242;
+    stroke-width: 0.5px;
+  }
+  circle:hover {
+      opacity: 0.8;
+  }
+  circle.blue {
+      fill: #1976D2;
+  }
+  circle.green {
+    fill: #388e3c;
+  }
+  circle.red {
+    fill: #D32F2F;
+  }
+
+  path.piece {
+    stroke: #424242;
+    stroke-width: 0.5px;
+  }
+  path.piece:hover {
+      opacity: 0.8;
+  }
+  path.piece.blue {
+      fill: #1976D2;
+  }
+  path.piece.green {
+    fill: #388e3c;
+  }
+  path.piece.red {
+    fill: #D32F2F;
+  }
+  svg {
+    background-color: #EEEEEE;
+  }
+  text.esbmeplot.axis-label {
+    font-size: 0.8em;
+  }
+  span.cmd-init {
+    display: block;
+    color: #03A9F4;
+}
+span.cmd-cmd {
+    display: block;
+    padding-left: 1em;
+}
+span.cmd-prototype {
+    color: #ffd54f;
+}
+span.cmd-bracket {
+    color: #E0E0E0;
+}
+span.cmd-value {
+    color: #ffe0b2;
+}
+
+svg {
+  position: absolute;
+}
+canvas {
+  position: absolute;
+}
+</style>
+<head>
+<script src="../d3.v4.min.js"></script>
+<script src="../plots/EsbmePlot.js"></script>
+<script src="../plots/Barplot.js"></script>
+<script src="../plots/Piechart.js"></script>
+<script src="../plots/Scatterplot.js"></script>
+
+</head>
+<body>
+  <div class="container">
+    <div id="tooltip"></div>
+<div id="plotOverlay">
+  <div class="flex-row">
+    <div class="plotArea"></div>
+    <div class="controlArea">
+    </div>
+  </div>
+  <div class="figure-legend">
+  </div>
+  <div class="controlSelector">
+  </div>
+</div>
+    <div class="plot-container">
+      <div class="barplot-plot plot-plotter"></div>
+      <div class="barplot-controls plot-controls"></div>
+      <div class="barplot-description plot-description"></div>
+    </div>
+
+    <div class="plot-container">
+      <div class="piechart-plot plot-plotter"></div>
+      <div class="piechart-controls plot-controls"></div>
+      <div class="piechart-description plot-description"></div>
+    </div>
+
+    <div class="plot-container">
+      <div class="scatterplot-plot plot-plotter"></div>
+      <div class="scatterplot-controls plot-controls"></div>
+      <div class="scatterplot-description plot-description"></div>
+    </div>
+
+  </div>
+</body>
+<script>
+function addCode(el,commands){
+  var init = el.selectAll(".cmd-init").data([commands.shift()])
+  init.enter()
+    .append("span")
+    .merge(init)
+    .attr("class","cmd-init")
+    .text(String)
+
+  var cmd = el.selectAll(".cmd-cmd").data(commands)
+  cmd.exit().remove()
+  cmd.enter()
+    .append("span")
+    .attr("class","cmd-cmd")
+    .call(function(el){
+      el.append("span")
+        .attr("class","cmd-prototype")
+    })
+    .call(function(el){
+      el.append("span")
+        .attr("class","cmd-bracket")
+        .text("(")
+    })
+    .call(function(el){
+      el.append("span")
+        .attr("class","cmd-value")
+    })
+    .call(function(el){
+      el.append("span")
+        .attr("class","cmd-bracket")
+        .text(")")
+    })
+    .merge(cmd)
+    .call(function(el){
+      el.select("span.cmd-prototype")
+      .text(function(d){
+        return d.replace(/^\.(\w+)\((.*)\)$/,function(match,p1,p2){
+          return "."+p1
+        })
+      })
+    })
+    .call(function(el){
+      el.select("span.cmd-value")
+      .text(function(d){
+        return d.replace(/^\.(\w+)\((.*)\)$/,function(match,p1,p2){
+          return p2
+        })
+      })
+    })
+
+  var eventCode = el.append("span")
+    .attr("class","cmd-cmd")
+  eventCode.append("span")
+    .attr("class","cmd-prototype")
+    .text(".events")
+  eventCode.append("span")
+    .attr("class","cmd-bracket")
+    .text("(")
+  eventCode.append("span")
+    .attr("class","cmd-value")
+    .html("{<br>&nbsp;&nbsp;mouseover : mouseoverFunction,<br>&nbsp;&nbsp;mousemove : mousemoveFunction,<br>&nbsp;&nbsp;mouseout : mouseoutFunction,<br>&nbsp;&nbsp;...<br>}")
+  eventCode.append("span")
+    .attr("class","cmd-bracket")
+    .text(")")
+
+  var infoCode = el.append("span")
+    .attr("class","cmd-cmd")
+  infoCode.append("span")
+    .attr("class","cmd-prototype")
+    .text(".info")
+  infoCode.append("span")
+    .attr("class","cmd-bracket")
+    .text("(")
+  infoCode.append("span")
+    .attr("class","cmd-value")
+    .text("[...]")
+  infoCode.append("span")
+    .attr("class","cmd-bracket")
+    .text(")")
+
+
+  var drawCode = el.append("span")
+    .attr("class","cmd-cmd")
+  drawCode.append("span")
+    .attr("class","cmd-prototype")
+    .text(".draw")
+  drawCode.append("span")
+    .attr("class","cmd-bracket")
+    .text("(")
+  drawCode.append("span")
+    .attr("class","cmd-bracket")
+    .text(")")
+}
+
+var events = {
+  mouseover: function(d){
+    d3.select("#tooltip")
+      .style("visibility","visible")
+      .style("top",d3.event.pageY-10+"px")
+      .style("left",d3.event.pageX+10+"px")
+      .text(
+      d.category+" - "+d.seriesName+": "+d.value
+    )
+  },
+  mousemove: function(){
+    d3.select("#tooltip")
+      .style("top",d3.event.pageY-10+"px")
+      .style("left",d3.event.pageX+10+"px")
+  },
+  mouseout: function(){
+    d3.select("#tooltip")
+      .style("visibility","hidden")
+      .style("top","0px")
+      .style("left","0px")
+      .text(null)
+  }
+}
+</script>
+<script src="makeBarplot.js"></script>
+<script src="makePiechart.js"></script>
+<script src="makeScatterplot.js"></script>
+
+
+</html>
