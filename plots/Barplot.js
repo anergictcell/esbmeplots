@@ -22,7 +22,6 @@
 function Barplot(){
   var stacked = true,
     categories = [],
-    xLabelRotation = 0,
     paddingInner = 0.1,
     paddingOuter = 0.1,
     scaleX = d3.scaleBand()
@@ -30,16 +29,7 @@ function Barplot(){
       .paddingOuter(paddingOuter)
       .rangeRound([0, 0]),
     scaleY = d3.scaleLinear()
-      .range([0,0]),
-    labelShiftX = d3.scaleLinear()
-      .range([0.5,-9])
-      .domain([0,-90]),
-    labelShiftY = d3.scaleLinear()
-      .range([9,-0.5])
-      .domain([0,-90]),
-    labelShiftDY = d3.scaleLinear()
-      .range([0.71,0.29])
-      .domain([0,-90])
+      .range([0,0])
 
   // creates a new EsbmePlot instance to use as Barplot
   var plot = new EsbmePlot()
@@ -80,24 +70,6 @@ function Barplot(){
       return plot
     } else {
       return categories
-    }
-  }
-
-  /**
-   * <p>Defines if the category names of the X-axis should be rotated</p>
-   * If value is specified, sets the degree of rotation.<br>
-   * If value is not specified, return the current degree of roation
-   * @memberof module:EsbmePlots.Barplot
-   * @instance
-   * @param {Int} [value]
-   * @method xLabelRotation
-   */
-  plot.xLabelRotation = function(_){
-    if (arguments.length){
-      xLabelRotation = _
-      return plot
-    } else {
-      return xLabelRotation
     }
   }
 
@@ -217,7 +189,7 @@ function Barplot(){
   plot.addAxes = function(){
     plot.addXAxis(categories)
     plot.addYAxis()
-    applyXLabelRotation()
+    plot.applyXLabelRotation()
   }
 
   plot.checkData = checkData
@@ -237,7 +209,7 @@ function Barplot(){
   function drawData(canvas, dimensions){
 
     // Have to call this again to override values set by axisGenerator
-    applyXLabelRotation()
+    plot.applyXLabelRotation()
 
     var className = this.className()
     var categoryGroups = canvas.selectAll("g.category")
@@ -420,28 +392,6 @@ function Barplot(){
         })
       return max > value ? max : value
     },0)
-  }
-
-  /**
-   * <p>Rotates the x-axis category labels</p>
-   * Rotates the labels if required and realigns them
-   * @memberof module:EsbmePlots.Barplot
-   * @instance
-   * @private
-   * @method applyXLabelRotation
-   */
-  function applyXLabelRotation(){
-    var label = plot.svg().selectAll("g.x-axis g.tick text")
-      .attr("transform","rotate("+xLabelRotation+")")
-      .attr("text-anchor","end")
-      .attr("x",labelShiftX(xLabelRotation)+"px")
-      .attr("y",labelShiftY(xLabelRotation)+"px")
-      .attr("dy",labelShiftDY(xLabelRotation)+"em")
-    if (xLabelRotation){
-      label.attr("text-anchor","end")
-    } else {
-      label.attr("text-anchor","middle")
-    }
   }
 
 }

@@ -99,7 +99,13 @@
       type: "number",
       value: 5,
       parser: Number
-    }
+    },
+    {
+      name: "xLabelRotation",
+      type: "number",
+      value: 0,
+      parser: Number
+    },
   ]
   var data = []
   function createScatterplotControls(){

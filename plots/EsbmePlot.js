@@ -26,7 +26,17 @@ function EsbmePlot(){
     events    = {},
     className = "id-"+Math.floor(Math.random()*10000000),
     duration  = 300,
-    finished  = function(){}
+    finished  = function(){},
+    xLabelRotation = 0,
+    labelShiftX = d3.scaleLinear()
+      .range([0.5,-9])
+      .domain([0,-90]),
+    labelShiftY = d3.scaleLinear()
+      .range([9,-0.5])
+      .domain([0,-90]),
+    labelShiftDY = d3.scaleLinear()
+      .range([0.71,0.29])
+      .domain([0,-90])
 
   /**
    * <p>Defines or returns the parent DOM element onto which the svg will be appended</p>
@@ -596,6 +606,46 @@ function EsbmePlot(){
       .attr("class","esbmeplot x-axis "+className)
 
     xAxis.call(xAxisGenerator)
+  }
+
+  /**
+   * <p>Defines if the category names of the X-axis should be rotated</p>
+   * If value is specified, sets the degree of rotation.<br>
+   * If value is not specified, return the current degree of roation
+   * @memberof module:EsbmePlots.Barplot
+   * @instance
+   * @param {Int} [value]
+   * @method xLabelRotation
+   */
+  this.xLabelRotation = function(_){
+    if (arguments.length){
+      xLabelRotation = _
+      return this
+    } else {
+      return xLabelRotation
+    }
+  }
+
+  /**
+   * <p>Rotates the x-axis category labels</p>
+   * Rotates the labels if required and realigns them
+   * @memberof module:EsbmePlots.Barplot
+   * @instance
+   * @private
+   * @method applyXLabelRotation
+   */
+  this.applyXLabelRotation = function(){
+    var label = this.svg().selectAll("g.x-axis g.tick text")
+      .attr("transform","rotate("+xLabelRotation+")")
+      .attr("text-anchor","end")
+      .attr("x",labelShiftX(xLabelRotation)+"px")
+      .attr("y",labelShiftY(xLabelRotation)+"px")
+      .attr("dy",labelShiftDY(xLabelRotation)+"em")
+    if (xLabelRotation){
+      label.attr("text-anchor","end")
+    } else {
+      label.attr("text-anchor","middle")
+    }
   }
 
   /**

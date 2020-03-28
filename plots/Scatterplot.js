@@ -38,22 +38,12 @@ function Scatterplot(){
     scaleY = d3.scaleLinear()
       .range([0,0]),
     colors = ["#D32F2F","#388e3c","#1976D2","#ffeb3b","#ff9800","#673ab7"]
-    labelShiftX = d3.scaleLinear()
-      .range([0.5,-9])
-      .domain([0,-90]),
-    labelShiftY = d3.scaleLinear()
-      .range([9,-0.5])
-      .domain([0,-90]),
-    labelShiftDY = d3.scaleLinear()
-      .range([0.71,0.29])
-      .domain([0,-90])
-
 
   // creates a new EsbmePlot instance to use as Scatterplot
   var plot = new EsbmePlot()
 
   // updates the default classname to still include the id, but
-  // also contain "piechart"
+  // also contain "scatterplot"
   var id = plot.className()
   plot.className("scatterplot "+id)
 
@@ -254,6 +244,7 @@ function Scatterplot(){
   plot.addAxes = function(){
     plot.addXAxis()
     plot.addYAxis()
+    plot.applyXLabelRotation()
   }
 
   plot.checkData = checkData
@@ -277,6 +268,9 @@ function Scatterplot(){
       virtualCanvas.attr("transform", canvas.attr("transform"))
       canvas = virtualCanvas
     }
+
+    // Have to call this again to override values set by axisGenerator
+    plot.applyXLabelRotation()
 
     var className = plot.className()
 
